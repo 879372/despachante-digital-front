@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Despachante Digital">
+  <rect width="512" height="512" rx="112" fill="#1D44D8"/>
+  <rect x="96" y="130" width="320" height="252" rx="48" fill="#FFFFFF"/>
+  <path d="M144 130h224a48 48 0 0 1 48 48v26H96v-26a48 48 0 0 1 48-48z" fill="#0B1F5C"/>
+  <circle cx="373" cy="167" r="14" fill="#F2B705"/>
+  <path d="M187 293l46 46 92-92" fill="none" stroke="#0B7A4B" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
