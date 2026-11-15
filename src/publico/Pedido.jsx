@@ -2,6 +2,7 @@ import { Check, Copy, Download, FileText, Loader2, MessageCircle, RefreshCw, Rot
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, brl, dataHora } from "../api";
+import { apiUrl } from "../api-url";
 import { Botao, Esqueleto, PlacaMini, Status, useToast } from "../components/ui";
 import { guardarPedido } from "./armazenamento";
 import LayoutPublico from "./LayoutPublico";
@@ -74,7 +75,7 @@ export default function PedidoPublico() {
           <div className="documento-pronto">
             <div className="item-icone verde"><FileText size={22} /></div>
             <div><strong>Documento disponível</strong><p className="suave">PDF pronto para baixar e imprimir.</p></div>
-            <a href={`/api/publico/pedido/${token}/documento/`}><Botao variante="primario" icone={Download}>Baixar PDF</Botao></a>
+            <a href={apiUrl(`/publico/pedido/${token}/documento/`)}><Botao variante="primario" icone={Download}>Baixar PDF</Botao></a>
           </div>
         )}
         {!p.codigo_seguranca && !p.tem_documento && p.mensagem && (

@@ -20,9 +20,17 @@ npm run build
 npm run preview
 ```
 
-Publique a pasta `dist` e configure o servidor para encaminhar `/api/` e `/gestao/` ao backend. As rotas da aplicação precisam de fallback para `index.html`.
+Na Vercel, `vercel.json` configura Vite, a saída `dist` e o fallback das rotas para `index.html`.
 
 ## Configuração
+
+Configure em Production na Vercel:
+
+```env
+VITE_API_URL=https://api-production-16b340bd.up.railway.app
+```
+
+A variável é incorporada no build; alterações exigem um novo deploy. Sem ela, as chamadas usam `/api/` no mesmo domínio, inclusive no desenvolvimento local. Também é aceito um endereço terminado em `/api`. Configure o domínio do frontend nas origens CORS do backend.
 
 A marca pode ser configurada com `VITE_APP_NOME` e `VITE_APP_SUBTITULO` durante o build. Credenciais de integração e pagamento ficam exclusivamente no backend.
 

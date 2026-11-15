@@ -2,6 +2,7 @@ import { ArrowLeft, Check, Gift, Loader2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, brl } from "../api";
+import { apiUrl } from "../api-url";
 import { useAuth } from "../auth";
 import { Botao, Campo, useToast } from "../components/ui";
 import { useConfig } from "../config";
@@ -33,7 +34,7 @@ export default function Cadastro() {
     if (!c) { setCodigo({ estado: "vazio" }); return; }
     setCodigo({ estado: "verificando" });
     const t = setTimeout(() => {
-      fetch(`/api/auth/indicacao/${encodeURIComponent(c)}/`)
+      fetch(apiUrl(`/auth/indicacao/${encodeURIComponent(c)}/`))
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => setCodigo(d?.valido ? { estado: "ok", indicador: d.indicador } : { estado: "invalido" }))
         .catch(() => setCodigo({ estado: "invalido" }));

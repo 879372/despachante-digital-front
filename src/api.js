@@ -1,4 +1,6 @@
-// Toda chamada vai para o NOSSO backend (/api). Nenhuma URL de terceiros aqui.
+import { apiUrl } from "./api-url";
+
+// Toda chamada vai para o nosso backend, definido por VITE_API_URL.
 const TOKEN = "desp_token";
 const REFRESH = "desp_refresh";
 
@@ -14,7 +16,7 @@ export const sessao = {
 async function renovar() {
   const refresh = localStorage.getItem(REFRESH);
   if (!refresh) return false;
-  const r = await fetch("/api/auth/refresh/", {
+  const r = await fetch(apiUrl("/auth/refresh/"), {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refresh }),
   });
   if (!r.ok) return false;
@@ -38,7 +40,7 @@ export async function api(caminho, { metodo = "GET", corpo, arquivo = false, ten
   if (corpo instanceof FormData) body = corpo;
   else if (corpo !== undefined) { headers["Content-Type"] = "application/json"; body = JSON.stringify(corpo); }
 
-  const r = await fetch(`/api${caminho}`, { method: metodo, headers, body });
+  const r = await fetch(apiUrl(caminho), { method: metodo, headers, body });
   if (r.status === 401 && !tentou && (await renovar())) {
     return api(caminho, { metodo, corpo, arquivo, tentou: true });
   }

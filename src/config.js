@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "./api-url";
 
 // Nome e subtítulo da marca. Troque aqui ou defina VITE_APP_NOME / VITE_APP_SUBTITULO no .env do frontend.
 export const MARCA = {
@@ -17,7 +18,7 @@ export function useConfig() {
   const [cfg, setCfg] = useState(cache || { bonus_indicacao_centavos: 500, bonus_gatilho: "primeira_recarga", suporte_email: "" });
   useEffect(() => {
     if (cache) return;
-    fetch("/api/config/").then((r) => r.json()).then((c) => { cache = c; setCfg(c); }).catch(() => {});
+    fetch(apiUrl("/config/")).then((r) => r.json()).then((c) => { cache = c; setCfg(c); }).catch(() => {});
   }, []);
   return cfg;
 }
