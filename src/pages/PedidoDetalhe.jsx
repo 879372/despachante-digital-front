@@ -22,8 +22,8 @@ function LinhaTempo({ pedido }) {
   const falhou = ["FALHA", "SEM_RESULTADO"].includes(pedido.status);
   const ok = pedido.status === "SUCESSO";
   const etapas = [{ nome: "Solicitado", icone: Send, feita: true }];
-  if (pedido.servico_codigo.startsWith("crlv")) {
-    etapas.push({ nome: "Emitindo no órgão", icone: Loader2, feita: ok || falhou, atual: !ok && !falhou });
+  if (pedido.servico_codigo.startsWith("crlv") || pedido.servico_codigo === "comunicado-venda") {
+    etapas.push({ nome: pedido.servico_codigo === "comunicado-venda" ? "Comunicando ao órgão" : "Emitindo no órgão", icone: Loader2, feita: ok || falhou, atual: !ok && !falhou });
   }
   etapas.push(falhou
     ? { nome: pedido.status_display, icone: X, erro: true }
@@ -76,7 +76,7 @@ export default function PedidoDetalhe() {
 
   const baixarDoc = async () => {
     setBaixando(true);
-    try { await baixar(`/pedidos/${id}/documento/`, `CRLV-${pedido.placa}.pdf`); } catch (e) { toast(e.message, "erro"); }
+    try { await baixar(`/pedidos/${id}/documento/`, `${pedido.servico_codigo}-${pedido.placa}.pdf`); } catch (e) { toast(e.message, "erro"); }
     setBaixando(false);
   };
 
@@ -112,7 +112,7 @@ export default function PedidoDetalhe() {
           {pedido.tem_documento && (
             <div className="documento-pronto">
               <div className="item-icone verde"><FileText size={22} /></div>
-              <div><strong>CRLV-e disponível</strong><p className="suave">Documento em PDF pronto para baixar e imprimir.</p></div>
+              <div><strong>{pedido.servico_codigo === "comunicado-venda" ? "Comprovante de venda disponível" : "CRLV-e disponível"}</strong><p className="suave">Documento em PDF pronto para baixar e imprimir.</p></div>
               <Botao variante="primario" icone={Download} carregando={baixando} onClick={baixarDoc}>Baixar PDF</Botao>
             </div>
           )}

@@ -1,5 +1,5 @@
 import { ArrowRight, CheckCircle2, Clock, CreditCard, FileText, Gift, Lock, QrCode, Wallet, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, brl, dataHora } from "../api";
 import { useAuth } from "../auth";
@@ -7,12 +7,16 @@ import { Botao, Esqueleto, Modal, PlacaInput, PlacaMini, Status, useToast, Vazio
 import { useConfig } from "../config";
 import { iconeServico } from "../servicos";
 
+import ComunicadoVenda, { novoComunicado, validarComunicado } from "../components/ComunicadoVenda";
+
 const PLACA_OK = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
 export default function Inicio() {
   const { usuario, recarregar } = useAuth();
   const navegar = useNavigate();
   const toast = useToast();
+  const [dados, setDados] = useState(novoComunicado);
+  const formularioRef = useRef(null);
   const [servicos, setServicos] = useState(null);
   const [servico, setServico] = useState("");
   const [placa, setPlaca] = useState("");
@@ -26,6 +30,8 @@ export default function Inicio() {
   }, []);
 
   const escolhido = servicos?.find((s) => s.codigo === servico);
+  const comunicado = escolhido?.formulario === "COMUNICADO_VENDA";
+  const continuar = () => { if (!comunicado || validarComunicado(formularioRef)) setConfirmar(true); };
   const placaValida = PLACA_OK.test(placa);
   const semSaldo = escolhido && usuario.saldo_centavos < escolhido.preco_centavos;
   const nome = (usuario.first_name || usuario.username).split(" ")[0];
@@ -38,7 +44,7 @@ export default function Inicio() {
   const irParaPagamento = async () => {
     setEnviando(true);
     try {
-      const c = await api("/pagamentos/pedido/", { metodo: "POST", corpo: { servico, placa } });
+      const c = await api("/pagamentos/pedido/", { metodo: "POST", corpo: { servico, placa, ...(comunicado ? { dados } : {}) } });
       window.location.href = c.url;
     } catch (err) {
       toast(err.message, "erro");
@@ -49,7 +55,7 @@ export default function Inicio() {
   const enviar = async () => {
     setEnviando(true);
     try {
-      const pedido = await api("/pedidos/", { metodo: "POST", corpo: { servico, placa } });
+      const pedido = await api("/pedidos/", { metodo: "POST", corpo: { servico, placa, ...(comunicado ? { dados } : {}) } });
       await recarregar();
       toast(pedido.status === "SUCESSO" ? "Pronto! Resultado disponível." : "Solicitação enviada com sucesso.");
       navegar(`/pedidos/${pedido.id}`);
@@ -91,7 +97,7 @@ export default function Inicio() {
                     <div><strong>{s.nome}</strong><p>{s.descricao}</p></div>
                     <div className="servico-rodape">
                       <span className="servico-preco">{brl(s.preco_centavos)}</span>
-                      <span className="servico-prazo">{s.assincrono ? <><Clock size={13} />1 a 3 dias úteis</> : <><Zap size={13} />Na hora</>}</span>
+                      <span className="servico-prazo">{s.formulario === "COMUNICADO_VENDA" ? <><Clock size={13} />Processamento pelo órgão</> : s.assincrono ? <><Clock size={13} />1 a 3 dias úteis</> : <><Zap size={13} />Na hora</>}</span>
                     </div>
                   </button>
                 );
@@ -100,15 +106,17 @@ export default function Inicio() {
           )}
 
           <div className="passo"><span className="passo-num">2</span>Digite a placa do veículo</div>
-          <PlacaInput valor={placa} onChange={setPlaca} onKeyDown={(e) => e.key === "Enter" && placaValida && escolhido && (!semSaldo || pagarOnline) && setConfirmar(true)} />
+          <PlacaInput valor={placa} onChange={setPlaca} onKeyDown={(e) => e.key === "Enter" && placaValida && escolhido && (!semSaldo || pagarOnline) && continuar()} />
           <p className="suave" style={{ textAlign: "center", margin: "10px 0 22px" }}>
             {placa.length === 7 && !placaValida ? <span style={{ color: "var(--vermelho)" }}>Placa inválida</span> : "Padrão antigo (ABC1234) ou Mercosul (ABC1D23)"}
           </p>
 
+          {comunicado && <ComunicadoVenda ref={formularioRef} dados={dados} onChange={setDados} />}
+
           {pagarOnline ? (
             <div className="caixa-pagar">
               <div className="resumo-linhas">
-                <div><span>Valor da consulta</span><strong>{brl(preco)}</strong></div>
+                <div><span>Valor do serviço</span><strong>{brl(preco)}</strong></div>
                 {temSaldoParcial && <div><span>Seu saldo</span><strong className="positivo">− {brl(usuario.saldo_centavos)}</strong></div>}
                 <div className="total"><span>{temSaldoParcial ? "Falta pagar" : "A pagar"}</span><strong>{brl(falta)}</strong></div>
               </div>
@@ -118,8 +126,8 @@ export default function Inicio() {
             <div className="aviso alerta"><Wallet size={18} /><span>Seu saldo não cobre este serviço. <Link to="/carteira">Adicionar saldo</Link></span></div>
           )}
           <Botao variante="primario" className="btn-grande" icone={pagarOnline ? Lock : ArrowRight}
-            disabled={!placaValida || !escolhido || (semSaldo && !pagarOnline)} onClick={() => setConfirmar(true)}>
-            {pagarOnline ? `Pagar ${brl(falta)} e consultar` : "Continuar"}
+            disabled={!placaValida || !escolhido || (semSaldo && !pagarOnline)} onClick={continuar}>
+            {pagarOnline ? `Pagar ${brl(falta)} e solicitar` : "Continuar"}
           </Botao>
           {pagarOnline && <p className="suave" style={{ textAlign: "center", marginTop: 10 }}>ou <Link to="/carteira">adicione saldo</Link> para pagar várias consultas</p>}
         </section>
@@ -158,12 +166,13 @@ export default function Inicio() {
           <div className="resumo-linhas">
             <div><span>Serviço</span><strong>{escolhido.nome}</strong></div>
             <div><span>Placa</span><strong><PlacaMini placa={placa} /></strong></div>
+            {comunicado && <><div><span>Vendedor</span><strong>{dados.vendedor.nome}</strong></div><div><span>Comprador</span><strong>{dados.comprador.nome}</strong></div><div><span>Data da venda</span><strong>{dados.venda_data.split("-").reverse().join("/")}</strong></div></>}
             {temSaldoParcial && <div><span>Usando seu saldo</span><strong>{brl(usuario.saldo_centavos)}</strong></div>}
             <div className="total"><span>A pagar agora</span><strong>{brl(falta)}</strong></div>
           </div>
         )}
         <div className="aviso info" style={{ marginTop: 16, marginBottom: 0 }}>
-          <Lock size={18} /><span>Você vai para a página de pagamento seguro (Pix ou cartão). Assim que o pagamento for confirmado, <strong>a consulta é feita automaticamente</strong>.</span>
+          <Lock size={18} /><span>Você vai para a página de pagamento seguro (Pix ou cartão). Assim que o pagamento for confirmado, <strong>o serviço é solicitado automaticamente</strong>.</span>
         </div>
       </Modal>
 
@@ -180,7 +189,8 @@ export default function Inicio() {
           <div className="resumo-linhas">
             <div><span>Serviço</span><strong>{escolhido.nome}</strong></div>
             <div><span>Placa</span><strong><PlacaMini placa={placa} /></strong></div>
-            <div><span>Prazo</span><strong>{escolhido.assincrono ? "1 a 3 dias úteis" : "Imediato"}</strong></div>
+            {comunicado && <><div><span>Vendedor</span><strong>{dados.vendedor.nome}</strong></div><div><span>Comprador</span><strong>{dados.comprador.nome}</strong></div><div><span>Data da venda</span><strong>{dados.venda_data.split("-").reverse().join("/")}</strong></div></>}
+            <div><span>Prazo</span><strong>{comunicado ? "Conforme processamento pelo órgão" : escolhido.assincrono ? "1 a 3 dias úteis" : "Imediato"}</strong></div>
             <div><span>Saldo após o pedido</span><strong>{brl(usuario.saldo_centavos - escolhido.preco_centavos)}</strong></div>
             <div className="total"><span>Total</span><strong>{brl(escolhido.preco_centavos)}</strong></div>
           </div>

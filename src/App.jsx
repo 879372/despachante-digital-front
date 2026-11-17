@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { brl } from "./api";
 import { useAuth } from "./auth";
-import { ChatProvider } from "./chat/ChatWidget";
+import { ChatProvider, useChat } from "./chat/ChatWidget";
 import { useNaoLidas } from "./chat/hooks";
 import { MARCA, partesNome } from "./config";
 import Admin from "./pages/Admin";
@@ -88,6 +88,7 @@ function ContadorAtendimento() {
 }
 
 function AreaLogada({ usuario, sair, tema, alternarTema, local }) {
+  const { abrir: abrirSuporte } = useChat();
   const avisarLido = () => window.dispatchEvent(new Event("chat-lido"));
   const nome = usuario.first_name || usuario.username;
   const iniciais = nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
@@ -101,6 +102,7 @@ function AreaLogada({ usuario, sair, tema, alternarTema, local }) {
           <NavLink to="/pedidos"><FileText size={19} />Meus pedidos</NavLink>
           <NavLink to="/carteira"><Wallet size={19} />Carteira</NavLink>
           <NavLink to="/indique"><Gift size={19} />Indique e ganhe</NavLink>
+          {!usuario.is_staff && <button type="button" className="menu-suporte" onClick={() => abrirSuporte()}><Headphones size={19} />Suporte</button>}
           {usuario.is_staff && (
             <>
               <div className="menu-titulo">Administração</div>
@@ -129,6 +131,7 @@ function AreaLogada({ usuario, sair, tema, alternarTema, local }) {
           <Logo />
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <Link to="/carteira" className="saldo-chip"><Wallet size={15} />{brl(usuario.saldo_centavos)}</Link>
+            {!usuario.is_staff && <button type="button" className="btn-icone" onClick={() => abrirSuporte()} aria-label="Abrir suporte"><Headphones size={18} /></button>}
             <button className="btn-icone" onClick={alternarTema}>{tema === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button>
             <button className="btn-icone" onClick={sair}><LogOut size={18} /></button>
           </div>

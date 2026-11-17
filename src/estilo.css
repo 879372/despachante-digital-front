@@ -89,11 +89,12 @@ p { margin: 0; }
 .logo small { display: block; font-weight: 500; font-size: .72rem; color: var(--suave); letter-spacing: 0; }
 .menu { display: flex; flex-direction: column; gap: 2px; }
 .menu-titulo { font-size: .7rem; font-weight: 600; color: var(--suave); text-transform: uppercase; letter-spacing: .08em; padding: 14px 12px 6px; }
-.menu a {
+.menu a, .menu-suporte {
   display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--raio-p);
   color: var(--texto-2); font-weight: 500; transition: background .15s, color .15s;
 }
-.menu a:hover { background: var(--superficie-2); color: var(--texto); }
+.menu-suporte { border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.menu a:hover, .menu-suporte:hover { background: var(--superficie-2); color: var(--texto); }
 .menu a.active { background: var(--primaria-fundo); color: var(--primaria); font-weight: 600; }
 .menu a .contador { margin-left: auto; background: var(--primaria); color: var(--on-primaria); font-size: .7rem; padding: 1px 7px; border-radius: 99px; }
 .lateral-rodape { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -655,3 +656,8 @@ details.mais summary { cursor: pointer; font-weight: 600; color: var(--texto-2);
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 .logo-link { color: var(--texto); }
 .site-topo .logo-link .logo { padding: 0; }
+
+.comunicado-form { border: 1px solid var(--borda, #ddd); border-radius: 12px; padding: 16px; margin: 20px 0; min-width: 0; }
+.comunicado-form legend { font-weight: 600; padding: 0 6px; }
+.comunicado-form h3 { margin: 20px 0 12px; }
+.comunicado-form input[type="file"] { width: 100%; font-size: 13px; }

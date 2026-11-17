@@ -11,10 +11,14 @@ import { iconeServico } from "../servicos";
 import { tokenPorRef } from "./armazenamento";
 import LayoutPublico from "./LayoutPublico";
 
+import ComunicadoVenda, { novoComunicado, validarComunicado } from "../components/ComunicadoVenda";
+
 const PLACA_OK = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
 export default function InicioPublico() {
   const toast = useToast();
+  const [dados, setDados] = useState(novoComunicado);
+  const formularioRef = useRef(null);
   const [placa, setPlaca] = useState("");
   const [placaConfirmada, setPlacaConfirmada] = useState("");
   const [servicos, setServicos] = useState(null);
@@ -39,6 +43,7 @@ export default function InicioPublico() {
   };
 
   const escolhido = servicos?.find((s) => s.codigo === servico);
+  const comunicado = escolhido?.formulario === "COMUNICADO_VENDA";
   const erros = useMemo(() => {
     const e = {};
     if (form.nome.trim().split(/\s+/).length < 2) e.nome = "Informe nome e sobrenome.";
@@ -53,13 +58,14 @@ export default function InicioPublico() {
     e.preventDefault();
     setTocado({ nome: true, email: true, telefone: true, aceite: true });
     if (Object.keys(erros).length || !escolhido) return;
+    if (comunicado && !validarComunicado(formularioRef)) return;
     setEnviando(true);
     try {
-      const r = await api("/publico/pagar/", { metodo: "POST", corpo: { servico, placa: placaConfirmada, ...form } });
+      const r = await api("/publico/pagar/", { metodo: "POST", corpo: { servico, placa: placaConfirmada, ...form, ...(comunicado ? { dados } : {}) } });
       window.location.href = r.url;
     } catch (err) {
       const campo = err.dados && Object.entries(err.dados).find(([k]) => k !== "detail");
-      toast(err.dados?.detail || (campo ? `${campo[1][0] || campo[1]}` : err.message), "erro");
+      toast(err.dados?.detail || (campo ? err.message : err.message), "erro");
       setEnviando(false);
     }
   };
@@ -113,7 +119,7 @@ export default function InicioPublico() {
                         <div><strong>{s.nome}</strong><p>{s.descricao}</p></div>
                         <div className="servico-rodape">
                           <span className="servico-preco">{brl(s.preco_centavos)}</span>
-                          <span className="servico-prazo">{s.assincrono ? <><Clock size={13} />1 a 3 dias úteis</> : <><Zap size={13} />Na hora</>}</span>
+                          <span className="servico-prazo">{s.formulario === "COMUNICADO_VENDA" ? <><Clock size={13} />Processamento pelo órgão</> : s.assincrono ? <><Clock size={13} />1 a 3 dias úteis</> : <><Zap size={13} />Na hora</>}</span>
                         </div>
                       </button>
                     );
@@ -136,6 +142,7 @@ export default function InicioPublico() {
                     <input inputMode="tel" autoComplete="tel" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })} onBlur={() => setTocado({ ...tocado, telefone: true })} placeholder="(84) 99999-1234" />
                   </Campo>
                 </div>
+                {comunicado && <ComunicadoVenda ref={formularioRef} dados={dados} onChange={setDados} />}
                 <label className="aceite">
                   <input type="checkbox" checked={form.aceite} onChange={(e) => { setForm({ ...form, aceite: e.target.checked }); setTocado({ ...tocado, aceite: true }); }} />
                   <span>Li e aceito os termos de uso e a política de privacidade.</span>
@@ -152,7 +159,7 @@ export default function InicioPublico() {
                   </div>
                 )}
                 <Botao variante="primario" className="btn-grande" icone={Lock} carregando={enviando} disabled={!escolhido}>
-                  {escolhido ? `Pagar ${brl(escolhido.preco_centavos)} e consultar` : "Escolha um serviço"}
+                  {escolhido ? `Pagar ${brl(escolhido.preco_centavos)} e solicitar` : "Escolha um serviço"}
                 </Botao>
               </form>
             </section>

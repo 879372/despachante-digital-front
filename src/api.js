@@ -28,6 +28,7 @@ function mensagemErro(dados, status) {
   if (!dados) return `Erro ${status}`;
   if (typeof dados.detail === "string") return dados.detail;
   const primeiro = Object.values(dados)[0];
+  if (primeiro && typeof primeiro === "object" && !Array.isArray(primeiro)) return mensagemErro(primeiro, status);
   if (Array.isArray(primeiro)) return primeiro[0];
   if (typeof primeiro === "string") return primeiro;
   return `Erro ${status}`;
